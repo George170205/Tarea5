@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Task List</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .input-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        #taskInput {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #e1e8ed;
+            border-radius: 50px;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        #taskInput:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        #addBtn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 100px;
+        }
+
+        #addBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        #addBtn:active {
+            transform: translateY(0);
+        }
+
+        .task-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 15px;
+            color: white;
+            font-weight: 600;
+        }
+
+        #taskList {
+            list-style: none;
+        }
+
+        .task-item {
+            background: white;
+            margin-bottom: 15px;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: all 0.3s ease;
+            border-left: 4px solid #667eea;
+        }
+
+        .task-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .task-text {
+            flex: 1;
+            font-size: 16px;
+            color: #333;
+            line-height: 1.5;
+        }
+
+        .task-text.editing {
+            background: #f8f9fa;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            padding: 8px 12px;
+            outline: none;
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            min-width: 60px;
+        }
+
+        .edit-btn {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            color: white;
+        }
+
+        .edit-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(79, 172, 254, 0.3);
+        }
+
+        .delete-btn {
+            background: linear-gradient(135deg, #fa709a, #fee140);
+            color: white;
+        }
+
+        .delete-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(250, 112, 154, 0.3);
+        }
+
+        .save-btn {
+            background: linear-gradient(135deg, #84fab0, #8fd3f4);
+            color: white;
+        }
+
+        .cancel-btn {
+            background: linear-gradient(135deg, #ffecd2, #fcb69f);
+            color: #333;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            color: #666;
+            font-size: 18px;
+        }
+
+        .empty-state img {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .task-item {
+            animation: slideIn 0.3s ease;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                margin: 10px;
+                padding: 20px;
+            }
+
+            .input-container {
+                flex-direction: column;
+            }
+
+            .task-actions {
+                flex-direction: column;
+                gap: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✨ Task Manager</h1>
+        
+        <div class="input-container">
+            <input type="text" id="taskInput" placeholder="What needs to be done?" maxlength="100">
+            <button id="addBtn">Add Task</button>
+        </div>
+
+        <div class="task-stats">
+            <span>Total Tasks: <span id="totalTasks">0</span></span>
+            <span>Completed: <span id="completedTasks">0</span></span>
+        </div>
+
+        <ul id="taskList"></ul>
+        
+        <div id="emptyState" class="empty-state" style="display: none;">
+            <div style="font-size: 4rem;">📝</div>
+            <p>No tasks yet. Add one above to get started!</p>
+        </div>
+    </div>
+
+    <script>
+        class TaskManager {
+            constructor() {
+                this.tasks = [];
+                this.currentEditId = null;
+                this.taskIdCounter = 1;
+                
+                this.taskInput = document.getElementById('taskInput');
+                this.addBtn = document.getElementById('addBtn');
+                this.taskList = document.getElementById('taskList');
+                this.emptyState = document.getElementById('emptyState');
+                this.totalTasksSpan = document.getElementById('totalTasks');
+                this.completedTasksSpan = document.getElementById('completedTasks');
+                
+                this.init();
+            }
+
+            init() {
+                this.addBtn.addEventListener('click', () => this.addTask());
+                this.taskInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        this.addTask();
+                    }
+                });
+                
+                this.updateEmptyState();
+                this.updateStats();
+            }
+
+            addTask() {
+                const taskText = this.taskInput.value.trim();
+                
+                if (taskText === '') {
+                    this.taskInput.focus();
+                    this.taskInput.style.borderColor = '#ff6b6b';
+                    setTimeout(() => {
+                        this.taskInput.style.borderColor = '#e1e8ed';
+                    }, 1000);
+                    return;
+                }
+
+                const task = {
+                    id: this.taskIdCounter++,
+                    text: taskText,
+                    completed: false,
+                    createdAt: new Date()
+                };
+
+                this.tasks.push(task);
+                this.taskInput.value = '';
+                this.renderTasks();
+                this.updateStats();
+                this.updateEmptyState();
+            }
+
+            renderTasks() {
+                this.taskList.innerHTML = '';
+                
+                this.tasks.forEach(task => {
+                    const taskItem = this.createTaskElement(task);
+                    this.taskList.appendChild(taskItem);
+                });
+            }
+
+            createTaskElement(task) {
+                const li = document.createElement('li');
+                li.className = 'task-item';
+                li.dataset.taskId = task.id;
+
+                li.innerHTML = `
+                    <div class="task-text" ${this.currentEditId === task.id ? 'contenteditable="true"' : ''}>${task.text}</div>
+                    <div class="task-actions">
+                        ${this.currentEditId === task.id ? 
+                            `<button class="btn save-btn" onclick="taskManager.saveEdit(${task.id})">Save</button>
+                             <button class="btn cancel-btn" onclick="taskManager.cancelEdit()">Cancel</button>` :
+                            `<button class="btn edit-btn" onclick="taskManager.editTask(${task.id})">Edit</button>
+                             <button class="btn delete-btn" onclick="taskManager.deleteTask(${task.id})">Delete</button>`
+                        }
+                    </div>
+                `;
+
+                if (this.currentEditId === task.id) {
+                    setTimeout(() => {
+                        const editableDiv = li.querySelector('.task-text');
+                        editableDiv.focus();
+                        editableDiv.classList.add('editing');
+                        
+                        // Place cursor at end
+                        const range = document.createRange();
+                        const selection = window.getSelection();
+                        range.selectNodeContents(editableDiv);
+                        range.collapse(false);
+                        selection.removeAllRanges();
+                        selection.addRange(range);
+                    }, 10);
+                }
+
+                return li;
+            }
+
+            editTask(taskId) {
+                this.currentEditId = taskId;
+                this.renderTasks();
+            }
+
+            saveEdit(taskId) {
+                const taskElement = document.querySelector(`[data-task-id="${taskId}"] .task-text`);
+                const newText = taskElement.textContent.trim();
+                
+                if (newText === '') {
+                    taskElement.style.borderColor = '#ff6b6b';
+                    taskElement.focus();
+                    return;
+                }
+
+                const task = this.tasks.find(t => t.id === taskId);
+                if (task) {
+                    task.text = newText;
+                    this.currentEditId = null;
+                    this.renderTasks();
+                }
+            }
+
+            cancelEdit() {
+                this.currentEditId = null;
+                this.renderTasks();
+            }
+
+            deleteTask(taskId) {
+                // Add a confirmation for better UX
+                if (confirm('Are you sure you want to delete this task?')) {
+                    this.tasks = this.tasks.filter(task => task.id !== taskId);
+                    this.renderTasks();
+                    this.updateStats();
+                    this.updateEmptyState();
+                }
+            }
+
+            updateStats() {
+                this.totalTasksSpan.textContent = this.tasks.length;
+                this.completedTasksSpan.textContent = this.tasks.filter(t => t.completed).length;
+            }
+
+            updateEmptyState() {
+                if (this.tasks.length === 0) {
+                    this.emptyState.style.display = 'block';
+                    this.taskList.style.display = 'none';
+                } else {
+                    this.emptyState.style.display = 'none';
+                    this.taskList.style.display = 'block';
+                }
+            }
+        }
+
+        // Initialize the task manager
+        const taskManager = new TaskManager();
+    </script>
+</body>
+</html>
